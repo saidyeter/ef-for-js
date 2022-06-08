@@ -8,16 +8,10 @@ db.book.Add({
     PublisherId: 2,
 })
 
-db.book.Changes.forEach(b => {
-    console.log(b);
-    
-});
+console.log(db.book.Changes);
 
-
-const some = db.book.Where()
-.BiggerThen('PublisherId',25)
-.Contains('Name','ali')
-
-
-console.log(some)
-
+const some = db.book
+    .Where()
+    .BiggerThen('PublisherId', 25)
+    .Contains('Name', 'ali')
+    .GetAll()

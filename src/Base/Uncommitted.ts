@@ -6,16 +6,3 @@ export type Uncommitted<T> = {
     ChangeKind: ChangeKindEnum
 };
 
-
-
-export interface DbTable{
-    Columns: DbColumn[]
-}
-
-
-export interface DbColumn{
-    Name: string
-    Type: string
-    IsKey?: boolean
-
-}
