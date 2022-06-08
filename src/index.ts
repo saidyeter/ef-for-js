@@ -1,4 +1,6 @@
+import { TableSaveChanges } from "./Base/Helper";
 import db from "./DataAccess/LibraryDbContext";
+import { BookTable } from "./DataAccess/Models/Book";
 
 
 db.book.Add({
@@ -15,3 +17,9 @@ const some = db.book
     .BiggerThen('PublisherId', 25)
     .Contains('Name', 'ali')
     .GetAll()
+
+console.log(some);
+
+
+TableSaveChanges(db.book.Changes, 'book', BookTable)
+

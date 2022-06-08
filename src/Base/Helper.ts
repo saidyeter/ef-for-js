@@ -1,9 +1,11 @@
 import { ChangeKindEnum } from "./ChangeKindEnum"
 import { DbSet } from "./DbSet"
-import { Condition, IQueryable } from "./IQueryable"
+import { DbTable } from "./DbTable"
+import { AllowedFieldTypes, AllowedOperationValueTypes, Condition, IQueryable } from "./IQueryable"
 import { Uncommitted } from "./Uncommitted"
 
-export function BaseDbSet<TBase, TStrParams, TNumParams>(tableName: string): DbSet<TBase, TStrParams, TNumParams> {
+export function BaseDbSet<TBase, TStrParams extends keyof TBase, TNumParams extends keyof TBase>(tableName: string):
+    DbSet<TBase, TStrParams, TNumParams> {
 
     const changes: Uncommitted<TBase>[] = []
 
@@ -70,7 +72,11 @@ export function BaseDbSet<TBase, TStrParams, TNumParams>(tableName: string): DbS
             return ({} as TBase)
         }
 
-        function addToContition(prop: unknown, fieldType: 'number' | 'string' | 'Date' | 'boolean', operator: string, val: number | string | Date | boolean) {
+        function addToContition(
+            prop: unknown,
+            fieldType: AllowedFieldTypes,
+            operator: string,
+            val: AllowedOperationValueTypes) {
 
             if (typeof prop !== 'string') {
                 throw new Error(`Unknown prop type: ${prop}`);
@@ -106,4 +112,36 @@ export function BaseDbSet<TBase, TStrParams, TNumParams>(tableName: string): DbS
         Remove: remove,
         Update: update
     }
+}
+
+
+
+export function TableSaveChanges<TBase>(
+    tableChanges: Uncommitted<TBase>[],
+    tableName: string,
+    table: DbTable) {
+
+    const sqlList: string[] = []
+    function getChangeVal(c: Uncommitted<TBase>, columnName: string): string {
+        const columnKey = columnName as keyof TBase
+        const val = c.Data[columnKey]
+        return String(val)
+    }
+
+    tableChanges.forEach(change => {
+        switch (change.ChangeKind) {
+            case ChangeKindEnum.Add:
+                const columnNames = table.Columns.map(x => x.Name).join(' ,')
+                const columnParams = table.Columns.map((_, i) => '@p' + i.toString()).join(' ,')
+                const sql = `INSERT INTO ${tableName} (${columnNames}) VALUES (${columnParams})`
+                const params = table.Columns.map((x, i) => '@p' + i.toString() + `= '${getChangeVal(change, x.Name)}'`).join(' ,')
+                sqlList.push(sql + '\n' + params)
+                break;
+            default:
+                break;
+        }
+    });
+
+    console.log(sqlList);
+
 }
