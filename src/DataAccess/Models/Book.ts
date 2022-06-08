@@ -1,5 +1,7 @@
 // import { DbTable } from "../../Base/Uncommitted"
 
+import { DbTable } from "../../Base/DbTable"
+
 export type Book = {
     Id?: number
     InsertedAt: Date
@@ -14,12 +16,13 @@ export type BookTableStrings = "Name"
 export type BookTableDates = "InsertedAt" 
 
 
-// export const BookTable: DbTable = {
-//     Columns: [
-//         { Name: 'Id', Type: 'number' },
-//         { Name: 'InsertedAt', Type: 'Date' },
-//         { Name: 'Name', Type: 'string' },
-//         { Name: 'AuthorId', Type: 'number' },
-//         { Name: 'PublisherId', Type: 'number' }
-//     ]
-// }
+export const BookTable: DbTable = {
+    Columns: [
+        
+        { Name: 'InsertedAt', Type: 'Date' },
+        { Name: 'Name', Type: 'string' },
+        { Name: 'AuthorId', Type: 'number' },
+        { Name: 'PublisherId', Type: 'number' }
+    ],
+    KeyColumn : { Name: 'Id', Type: 'number' },
+}
