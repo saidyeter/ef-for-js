@@ -1,6 +1,6 @@
 export interface IQueryable<TBase,TStrParams,TNumParams> {
-    Conditions : Condition[]
-    ToArray: () => TBase[]
+    GetAll: () => TBase[]
+    GetFirst: () => TBase
     Contains : (prop: TStrParams, val: string) => IQueryable<TBase,TStrParams,TNumParams>
     BiggerThen : (prop: TNumParams, val: number)=> IQueryable<TBase,TStrParams,TNumParams>
 }; 
