@@ -1,4 +1,4 @@
-import { BaseDbSet } from "../Base/Helper";
+import { BaseDbSet } from "../Base/Core";
 import { Author, AuthorTableNumbers, AuthorTableStrings } from "./Models/Author";
 import { Book, BookTableNumbers, BookTableStrings } from "./Models/Book";
 import { Publisher, PublisherTableNumbers, PublisherTableStrings } from "./Models/Publisher";

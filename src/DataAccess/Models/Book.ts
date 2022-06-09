@@ -19,10 +19,10 @@ export type BookTableDates = "InsertedAt"
 export const BookTable: DbTable = {
     Columns: [
         
-        { Name: 'InsertedAt', Type: 'Date' },
-        { Name: 'Name', Type: 'string' },
-        { Name: 'AuthorId', Type: 'number' },
-        { Name: 'PublisherId', Type: 'number' }
+        { Name: 'InsertedAt', Type: 'datetime' },
+        { Name: 'Name', Type: 'nvarchar' },
+        { Name: 'AuthorId', Type: 'int' },
+        { Name: 'PublisherId', Type: 'int' }
     ],
-    KeyColumn : { Name: 'Id', Type: 'number' },
+    KeyColumn : { Name: 'Id', Type: 'int' },
 }

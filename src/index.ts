@@ -1,4 +1,5 @@
-import { TableSaveChanges } from "./Base/Helper";
+import { MsSqlAdapter } from "./Base/Adapter";
+import { TableSaveChanges } from "./Base/Core";
 import db from "./DataAccess/LibraryDbContext";
 import { BookTable } from "./DataAccess/Models/Book";
 
@@ -20,6 +21,9 @@ const some = db.book
 
 console.log(some);
 
+const adapter= new MsSqlAdapter('')
+TableSaveChanges(db.book.Changes, 'book', BookTable,adapter)
 
-TableSaveChanges(db.book.Changes, 'book', BookTable)
-
+db.book
+    .Where()
+    .GetAll()
