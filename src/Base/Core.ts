@@ -1,3 +1,4 @@
+import { DbAdapter, Sql, SqlParameter } from "./Adapter"
 import { ChangeKindEnum } from "./ChangeKindEnum"
 import { DbSet } from "./DbSet"
 import { DbTable } from "./DbTable"
@@ -119,9 +120,10 @@ export function BaseDbSet<TBase, TStrParams extends keyof TBase, TNumParams exte
 export function TableSaveChanges<TBase>(
     tableChanges: Uncommitted<TBase>[],
     tableName: string,
-    table: DbTable) {
+    table: DbTable,
+    adapter: DbAdapter) {
 
-    const sqlList: string[] = []
+    const sqlList: Sql[] = []
     function getChangeVal(c: Uncommitted<TBase>, columnName: string): string {
         const columnKey = columnName as keyof TBase
         const val = c.Data[columnKey]
@@ -133,15 +135,28 @@ export function TableSaveChanges<TBase>(
             case ChangeKindEnum.Add:
                 const columnNames = table.Columns.map(x => x.Name).join(' ,')
                 const columnParams = table.Columns.map((_, i) => '@p' + i.toString()).join(' ,')
-                const sql = `INSERT INTO ${tableName} (${columnNames}) VALUES (${columnParams})`
-                const params = table.Columns.map((x, i) => '@p' + i.toString() + `= '${getChangeVal(change, x.Name)}'`).join(' ,')
-                sqlList.push(sql + '\n' + params)
+                const statement = `INSERT INTO ${tableName} (${columnNames}) VALUES (${columnParams})`
+                const params = table.Columns.map((x,i):SqlParameter =>{
+                    return {
+                        DataType : x.Type,
+                        Name: '@p' + i.toString(),
+                        Value : getChangeVal(change, x.Name)
+                    }
+                })
+                
+                //table.Columns.map((x, i) => '@p' + i.toString() + `= '${getChangeVal(change, x.Name)}'`).join(' ,')
+                sqlList.push({
+                    Statement: statement,
+                    Parameters: params
+                })
                 break;
             default:
                 break;
         }
     });
 
-    console.log(sqlList);
-
+    sqlList.forEach(sql => {
+        adapter.execute(sql)
+    });
+    
 }
