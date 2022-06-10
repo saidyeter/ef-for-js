@@ -1,3 +1,5 @@
+import { AllowedOperationValueTypes } from "./IQueryable"
+
 export type DbConfig = {
     user: string,
     password: string,
@@ -10,7 +12,7 @@ export type DbConfig = {
 export type SqlDataType = 'smallint' | 'int' | 'bigint' | 'char' | 'varchar' | 'nvarchar' | 'date' | 'time' | 'datetime'
 export type SqlParameter = {
     Name: string,
-    Value: string | number | Date,
+    Value: AllowedOperationValueTypes,
     DataType: SqlDataType
 }
 
@@ -37,7 +39,7 @@ export class MsSqlAdapter extends DbAdapter {
     }
     read<TResult>(v:Sql): TResult[] {
         console.log(v);
-        throw new Error("Method not implemented.")
+        return [] as TResult[]
     }
 
 }
