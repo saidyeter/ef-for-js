@@ -1,5 +1,3 @@
-// import { DbTable } from "../../Base/Uncommitted"
-
 import { DbTable } from "../../Base/DbTable"
 
 export type Book = {
@@ -14,7 +12,6 @@ const nums =["Id" , "AuthorId" , "PublisherId"] as const
 export type BookTableNumbers = typeof nums[number]
 export type BookTableStrings = "Name" 
 export type BookTableDates = "InsertedAt" 
-
 
 export const BookTable: DbTable = {
     Columns: [
