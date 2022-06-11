@@ -1,0 +1,18 @@
+{
+  "name": "ef-for-js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/kordiseps/ef-for-js.git",
+  "author": "Said Yeter <kordiseps@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsc && node dist/index.js"
+  },
+  "dependencies": {
+    "mssql": "^8.1.2"
+  },
+  "devDependencies": {
+    "@types/mssql": "^8.0.2",
+    "typescript": "^4.7.3"
+  }
+}

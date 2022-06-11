@@ -2,7 +2,7 @@
 ORM for JavaScript like dotnet Entity Framework 
 
 ### TODO:
-- Test with mssql
+
 - Implement update and delete 
 - Implement date and bool where conditions
 - Create more where methods

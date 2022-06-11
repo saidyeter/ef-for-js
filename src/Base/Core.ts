@@ -40,7 +40,7 @@ export function BaseDbSet<TBase,
 
                 sqlParameters.push({
                     DataType: columnSqlType,
-                    Name: columnParamName,
+                    Name: 'p' + index.toString(),
                     Value: element.OperationValue as AllowedOperationValueTypes
                 })
 
@@ -71,21 +71,26 @@ export function BaseDbSet<TBase,
             return [conditionPart, sqlParameters]
         }
 
-        function readAll(): TBase[] {
+        async function readAll(): Promise<TBase[]> {
             const [conditionStr, conditionParams] = getConditionString()
-            const sql: string = `SELECT * FROM ${tableName} ${conditionStr}`
-            return adapter.read({
+            const sql: string = `SELECT * FROM ${tableName} ${conditionStr}`            
+
+            const result = await adapter.read<TBase>({
                 Statement: sql,
                 Parameters: conditionParams
             })
+            return result
+
         }
-        function readFirst(): TBase {
+
+        async function readFirst(): Promise<TBase> {
             const [conditionStr, conditionParams] = getConditionString()
             const sql: string = `SELECT TOP 1 * FROM ${tableName} ${conditionStr}`
-            return adapter.read({
+            const result = await adapter.read<TBase>({
                 Statement: sql,
                 Parameters: conditionParams
-            })[0] as TBase
+            })
+            return result[0]
         }
 
         function addToContition(
@@ -132,7 +137,7 @@ export function BaseDbSet<TBase,
 
 
 
-export function TableSaveChanges<TBase>(
+export async function TableSaveChanges<TBase>(
     tableChanges: Uncommitted<TBase>[],
     tableName: string,
     table: DbTable,
@@ -154,7 +159,7 @@ export function TableSaveChanges<TBase>(
                 const params = table.Columns.map((x, i): SqlParameter => {
                     return {
                         DataType: x.Type,
-                        Name: '@p' + i.toString(),
+                        Name: 'p' + i.toString(),
                         Value: getChangeVal(change, x.Name)
                     }
                 })
@@ -170,8 +175,8 @@ export function TableSaveChanges<TBase>(
         }
     });
 
-    sqlList.forEach(sql => {
-        adapter.execute(sql)
+    sqlList.forEach(async sql => {
+        await adapter.execute(sql)
     });
 
 }

@@ -1,6 +1,6 @@
 export interface IQueryable<TBase, TStrParams extends keyof TBase, TNumParams extends keyof TBase> {
-    GetAll: () => TBase[]
-    GetFirst: () => TBase
+    GetAll: () => Promise<TBase[]>
+    GetFirst: () => Promise<TBase>
     Contains: (prop: TStrParams, val: string) => IQueryable<TBase, TStrParams, TNumParams>
     BiggerThen: (prop: TNumParams, val: number) => IQueryable<TBase, TStrParams, TNumParams>
 };
