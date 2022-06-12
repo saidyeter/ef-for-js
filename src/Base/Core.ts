@@ -181,6 +181,14 @@ export async function TableSaveChanges<TBase>(
                     Value: getChangeVal(change, table.KeyColumn.Name)
                 })
                 break;
+            case ChangeKindEnum.Remove:
+                statement = `DELETE FROM ${tableName} WHERE ${table.KeyColumn.Name + ' = @k'}`
+                params.push({
+                    DataType: table.KeyColumn.Type,
+                    Name: 'k',
+                    Value: getChangeVal(change, table.KeyColumn.Name)
+                })
+                break;
             default:
                 break;
         }

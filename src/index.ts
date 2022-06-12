@@ -30,7 +30,7 @@ import dbAdapter from "./DataAccess/LibraryDbContext";
 
     if (first) {
         first.AuthorId = 899
-        db.book.Update(first)
+        db.book.Remove(first)
     }
 
     db.book.Add({
