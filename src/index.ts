@@ -18,21 +18,26 @@ import dbAdapter from "./DataAccess/LibraryDbContext";
     .Where()
     .GetAll()
 
-    console.log(all);
+    console.log('all',all);
 
 
     const first = await db.book
         .Where()
-        .BiggerThen('PublisherId', 4)
+        .BiggerThen('AuthorId', 900)
         .GetFirst()
 
-    console.log(first);
+    console.log('first',first);
+
+    if (first) {
+        first.AuthorId = 899
+        db.book.Update(first)
+    }
 
     db.book.Add({
         InsertedAt: new Date(),
-        Name: 'Dice man',
-        AuthorId: 12,
-        PublisherId: 2,
+        Name: 'Rain man',
+        AuthorId: 45,
+        PublisherId: 23,
     })
 
     await db.SaveChanges()
