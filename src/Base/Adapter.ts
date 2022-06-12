@@ -33,7 +33,12 @@ export abstract class DbAdapter {
 
 export class MsSqlAdapter extends DbAdapter {
 
+    private pool : sql.ConnectionPool = {} as sql.ConnectionPool
     private async connect(): Promise<sql.ConnectionPool> {
+        if (this.pool.available && this.pool.connected) {
+            return this.pool
+        }
+        
         if (typeof this.arg === 'string') {
             return await sql.connect(this.arg)
         } else if (typeof this.arg === 'object') {
@@ -63,6 +68,7 @@ export class MsSqlAdapter extends DbAdapter {
             case 'char' : return sql.Char;
             case 'varchar' : return sql.VarChar
             case 'nvarchar' : return sql.NVarChar
+
             default : break;
         }
 
@@ -71,7 +77,8 @@ export class MsSqlAdapter extends DbAdapter {
 
     async execute(v: Sql): Promise<void> {
         const pool = await this.connect()
-        const request = await pool.request()
+    
+        const request = pool.request()
 
         v.Parameters?.forEach(p=>{
             request.input(p.Name, this.convert(p.DataType), p.Value)
@@ -79,12 +86,13 @@ export class MsSqlAdapter extends DbAdapter {
 
         const result = await request.query(v.Statement)
         console.log(result);
+        
     }
 
     async read<TResult>(v: Sql): Promise<TResult[]> {
 
         const pool = await this.connect()
-        const request = await pool.request()
+        const request = pool.request()
 
         v.Parameters?.forEach(p=>{
             request.input(p.Name, this.convert(p.DataType), p.Value)

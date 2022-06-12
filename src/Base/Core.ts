@@ -73,7 +73,7 @@ export function BaseDbSet<TBase,
 
         async function readAll(): Promise<TBase[]> {
             const [conditionStr, conditionParams] = getConditionString()
-            const sql: string = `SELECT * FROM ${tableName} ${conditionStr}`            
+            const sql: string = `SELECT * FROM ${tableName} ${conditionStr}`
 
             const result = await adapter.read<TBase>({
                 Statement: sql,
@@ -151,28 +151,43 @@ export async function TableSaveChanges<TBase>(
     }
 
     tableChanges.forEach(change => {
+        let statement: string = ''
+        let params: SqlParameter[] = []
         switch (change.ChangeKind) {
             case ChangeKindEnum.Add:
                 const columnNames = table.Columns.map(x => x.Name).join(' ,')
                 const columnParams = table.Columns.map((_, i) => '@p' + i.toString()).join(' ,')
-                const statement = `INSERT INTO ${tableName} (${columnNames}) VALUES (${columnParams})`
-                const params = table.Columns.map((x, i): SqlParameter => {
+                statement = `INSERT INTO ${tableName} (${columnNames}) VALUES (${columnParams})`
+                params = table.Columns.map((x, i): SqlParameter => {
                     return {
                         DataType: x.Type,
                         Name: 'p' + i.toString(),
                         Value: getChangeVal(change, x.Name)
                     }
                 })
-
-                //table.Columns.map((x, i) => '@p' + i.toString() + `= '${getChangeVal(change, x.Name)}'`).join(' ,')
-                sqlList.push({
-                    Statement: statement,
-                    Parameters: params
+                break;
+            case ChangeKindEnum.Update:
+                statement = `UPDATE ${tableName} SET ${table.Columns.map((c, i) => c.Name + ' = @p' + i.toString()).join(' ,')} WHERE ${table.KeyColumn.Name + ' = @k'}`
+                params = table.Columns.map((x, i): SqlParameter => {
+                    return {
+                        DataType: x.Type,
+                        Name: 'p' + i.toString(),
+                        Value: getChangeVal(change, x.Name)
+                    }
+                })
+                params.push({
+                    DataType: table.KeyColumn.Type,
+                    Name: 'k',
+                    Value: getChangeVal(change, table.KeyColumn.Name)
                 })
                 break;
             default:
                 break;
         }
+        sqlList.push({
+            Statement: statement,
+            Parameters: params
+        })
     });
 
     sqlList.forEach(async sql => {
