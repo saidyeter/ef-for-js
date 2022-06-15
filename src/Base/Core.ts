@@ -6,9 +6,10 @@ import { AllowedFieldTypes, AllowedOperationValueTypes, Condition, IQueryable } 
 import { Uncommitted } from "./Uncommitted"
 
 export function BaseDbSet<TBase,
-    TStrParams extends keyof TBase,
-    TNumParams extends keyof TBase>
-    (tableName: string, adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams> {
+    TStrParams extends keyof TBase, 
+    TNumParams extends keyof TBase,
+    TDateParams extends keyof TBase>
+    (tableName: string, adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams,TDateParams> {
     const changes: Uncommitted<TBase>[] = []
 
     function createChange(rec: TBase, changeType: ChangeKindEnum): Uncommitted<TBase> {
@@ -21,59 +22,67 @@ export function BaseDbSet<TBase,
     function remove(rec: TBase) { changes.push(createChange(rec, ChangeKindEnum.Remove)) }
     function update(rec: TBase) { changes.push(createChange(rec, ChangeKindEnum.Update)) }
 
-    function generateWhere(): IQueryable<TBase, TStrParams, TNumParams> {
+    function generateWhere(): IQueryable<TBase, TStrParams, TNumParams,TDateParams> {
         const conditions: Condition[] = []
 
-        const iqueryable: IQueryable<TBase, TStrParams, TNumParams> = {
+        const iqueryable: IQueryable<TBase, TStrParams, TNumParams,TDateParams> = {
             GetAll: readAll,
             GetFirst: readFirst,
 
             Contains: contains,
-            BiggerThen: biggerThen
+            BiggerThen: biggerThen,
+
+            Year:year
         }
 
         function getConditionString(): [string, SqlParameter[]] {
+            const columnParamKey= 'p'
             const sqlParameters: SqlParameter[] = []
             const conditionStrings = conditions.map((element, index) => {
                 const columnSqlType = table.Columns.filter(x => x.Name == element.FieldName)[0].Type
-                const columnParamName = '@p' + index.toString()
+                const columnParamName = '@'+ columnParamKey + index.toString()
 
                 sqlParameters.push({
                     DataType: columnSqlType,
-                    Name: 'p' + index.toString(),
+                    Name: columnParamKey + index.toString(),
                     Value: element.OperationValue as AllowedOperationValueTypes
                 })
 
                 switch (element.FieldType) {
-                    case 'Date': return ''
-                    case 'boolean': return ''
+                    case 'Date':
+                        switch (element.Operator) {
+                            case 'biggerThan': return adapter.createDateBiggerThanWhereString(element.FieldName, columnParamName)
+                            case 'lessThan': return adapter.createDateLessThanWhereString(element.FieldName, columnParamName)
+                            case 'year': return adapter.createDateYearWhereString(element.FieldName, columnParamName)
+                            case 'month': return adapter.createDateMonthWhereString(element.FieldName, columnParamName)
+                            case 'day': return adapter.createDateDayWhereString(element.FieldName, columnParamName)
+                            default: return ''
+                        }
                     case 'number':
                         switch (element.Operator) {
-                            case 'biggerThan': return `${element.FieldName} > ${columnParamName}`
-                            case 'lessThan': return `${element.FieldName} < ${columnParamName}`
-                            case 'equals': return `${element.FieldName} = ${columnParamName}`
+                            case 'biggerThan': return adapter.createNumberBiggerThanWhereString(element.FieldName,columnParamName)
+                            case 'lessThan': return adapter.createNumberLessThanWhereString(element.FieldName,columnParamName)
+                            case 'equals': return adapter.createNumberEqualsWhereString(element.FieldName,columnParamName)
                             default: return ''
                         }
                     case 'string':
                         switch (element.Operator) {
-                            case 'contains': return `${element.FieldName} LIKE '%${columnParamName}%'`
-                            case 'startsWith': return `${element.FieldName} LIKE '${columnParamName}%'`
-                            case 'endsWith': return `${element.FieldName} LIKE '%${columnParamName}'`
+                            case 'contains': return adapter.createStringContainsWhereString(element.FieldName,columnParamName)
+                            case 'startsWith': return adapter.createStringStartsWithWhereString(element.FieldName,columnParamName)
+                            case 'endsWith': return adapter.createStringEndsWithWhereString(element.FieldName,columnParamName)
                             default: return ''
                         }
                     default: return ''
                 }
             });
 
-            const clearConditionStrings = conditionStrings.filter(v => v.length > 0)
-
-            const conditionPart: string = clearConditionStrings.length == 0 ? '' : 'WHERE ' + clearConditionStrings.join(' and ')
+            const conditionPart: string = adapter.getConditionString(conditionStrings)
             return [conditionPart, sqlParameters]
         }
 
         async function readAll(): Promise<TBase[]> {
             const [conditionStr, conditionParams] = getConditionString()
-            const sql: string = `SELECT * FROM ${tableName} ${conditionStr}`
+            const sql: string = adapter.createSelectAllString(tableName, conditionStr)
 
             const result = await adapter.read<TBase>({
                 Statement: sql,
@@ -85,11 +94,15 @@ export function BaseDbSet<TBase,
 
         async function readFirst(): Promise<TBase> {
             const [conditionStr, conditionParams] = getConditionString()
-            const sql: string = `SELECT TOP 1 * FROM ${tableName} ${conditionStr}`
+            const sql: string = adapter.createSelectTopNString(tableName, conditionStr, 1)
+            console.log(sql,conditionParams);
+            
             const result = await adapter.read<TBase>({
                 Statement: sql,
                 Parameters: conditionParams
             })
+            console.log(result);
+            
             return result[0]
         }
 
@@ -123,6 +136,10 @@ export function BaseDbSet<TBase,
             return iqueryable
         }
 
+        function year(prop: TDateParams, val: number) {
+            addToContition(prop, 'number', 'year', val)
+            return iqueryable
+        }
         return iqueryable
     }
 
@@ -144,48 +161,56 @@ export async function TableSaveChanges<TBase>(
     adapter: DbAdapter) {
 
     const sqlList: Sql[] = []
-    function getChangeVal(c: Uncommitted<TBase>, columnName: string): string {
+    
+    function getChangeVal(c: Uncommitted<TBase>, columnName: string): AllowedOperationValueTypes {
         const columnKey = columnName as keyof TBase
         const val = c.Data[columnKey]
-        return String(val)
+
+        if (val instanceof Date) {
+            return val
+        } else if (typeof val === 'number') {
+            return val
+        } else {
+            return String(val)
+        }        
     }
 
     tableChanges.forEach(change => {
+        const columnParamKey= 'p'
+        const keyColumnParamKey= 'k'
         let statement: string = ''
         let params: SqlParameter[] = []
         switch (change.ChangeKind) {
-            case ChangeKindEnum.Add:
-                const columnNames = table.Columns.map(x => x.Name).join(' ,')
-                const columnParams = table.Columns.map((_, i) => '@p' + i.toString()).join(' ,')
-                statement = `INSERT INTO ${tableName} (${columnNames}) VALUES (${columnParams})`
+            case ChangeKindEnum.Add: 
+                statement = adapter.getInsertString(tableName,table,columnParamKey)
                 params = table.Columns.map((x, i): SqlParameter => {
                     return {
                         DataType: x.Type,
-                        Name: 'p' + i.toString(),
+                        Name: columnParamKey + i.toString(),
                         Value: getChangeVal(change, x.Name)
                     }
                 })
                 break;
             case ChangeKindEnum.Update:
-                statement = `UPDATE ${tableName} SET ${table.Columns.map((c, i) => c.Name + ' = @p' + i.toString()).join(' ,')} WHERE ${table.KeyColumn.Name + ' = @k'}`
+                statement = adapter.getUpdateString(tableName,table,columnParamKey,keyColumnParamKey)
                 params = table.Columns.map((x, i): SqlParameter => {
                     return {
                         DataType: x.Type,
-                        Name: 'p' + i.toString(),
+                        Name: columnParamKey + i.toString(),
                         Value: getChangeVal(change, x.Name)
                     }
                 })
                 params.push({
                     DataType: table.KeyColumn.Type,
-                    Name: 'k',
+                    Name: keyColumnParamKey,
                     Value: getChangeVal(change, table.KeyColumn.Name)
                 })
                 break;
             case ChangeKindEnum.Remove:
-                statement = `DELETE FROM ${tableName} WHERE ${table.KeyColumn.Name + ' = @k'}`
+                statement = adapter.getDeleteString(tableName,table,keyColumnParamKey)
                 params.push({
                     DataType: table.KeyColumn.Type,
-                    Name: 'k',
+                    Name: keyColumnParamKey,
                     Value: getChangeVal(change, table.KeyColumn.Name)
                 })
                 break;
