@@ -14,31 +14,13 @@ import dbAdapter from "./DataAccess/LibraryDbContext";
 
     const db = dbAdapter.init(conenctionString)
 
-    const all = await db.book
-    .Where()
-    .GetAll()
 
-    console.log('all',all);
-
-
-    const first = await db.book
+    const year = await db.book
         .Where()
-        .BiggerThen('AuthorId', 900)
+        .Year('InsertedAt',2022)
         .GetFirst()
 
-    console.log('first',first);
+    console.log('year', year);
 
-    if (first) {
-        first.AuthorId = 899
-        db.book.Remove(first)
-    }
-
-    db.book.Add({
-        InsertedAt: new Date(),
-        Name: 'Rain man',
-        AuthorId: 45,
-        PublisherId: 23,
-    })
-
-    await db.SaveChanges()
+    
 })()

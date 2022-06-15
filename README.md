@@ -3,7 +3,6 @@ ORM for JavaScript like dotnet Entity Framework
 
 ### TODO:
 
-- Implement update and delete 
 - Implement date and bool where conditions
 - Create more where methods
 
