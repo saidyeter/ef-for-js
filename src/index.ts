@@ -14,13 +14,24 @@ import dbAdapter from "./DataAccess/LibraryDbContext";
 
     const db = dbAdapter.init(conenctionString)
 
-
-    const year = await db.book
+    const rec = await db.book
         .Where()
         .Year('InsertedAt',2022)
+        .Month('InsertedAt',6)
+        .Day('InsertedAt',11)
+        .Hour('InsertedAt',12)
+        .Minute('InsertedAt',49)
+        .Second('InsertedAt',11)
+        .Contains('Name','em')
+        .EndsWith('Name','or')
+        .StartsWith('Name','Dune')
+        .BiggerThenNumber('AuthorId',1)
+        .LessThenNumber('PublisherId',10)
+        .EqualsNumber('Id',3)
+
         .GetFirst()
 
-    console.log('year', year);
+    console.log('rec', rec);
 
     
 })()

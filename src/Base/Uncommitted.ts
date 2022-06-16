@@ -1,7 +1,7 @@
 import { ChangeKindEnum } from "./ChangeKindEnum";
 
 
-export type Uncommitted<T> = {
+export interface Uncommitted<T> {
     Data: T
     ChangeKind: ChangeKindEnum
 };

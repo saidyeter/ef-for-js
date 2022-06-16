@@ -4,13 +4,13 @@ import { DbTable } from './DbTable'
 import { AllowedOperationValueTypes } from "./IQueryable"
 
 export type SqlDataType = 'smallint' | 'int' | 'bigint' | 'char' | 'varchar' | 'nvarchar' | 'date' | 'time' | 'datetime'
-export type SqlParameter = {
+export interface SqlParameter  {
     Name: string,
     Value: AllowedOperationValueTypes,
     DataType: SqlDataType
 }
 
-export type Sql = {
+export interface Sql {
     Statement: string,
     Parameters?: SqlParameter[]
 }
@@ -66,14 +66,25 @@ export abstract class DbAdapter {
         return `${fieldName} < ${columnParamName}`
     }
     createDateYearWhereString(fieldName: string, columnParamName: string): string {
-        return `YEAR(${fieldName}) = ${columnParamName}`
+        return `DATEPART(YEAR, ${fieldName}) = ${columnParamName}`
     }
     createDateMonthWhereString(fieldName: string, columnParamName: string): string {
-        return `MONTH(${fieldName}) = ${columnParamName}`
+        return `DATEPART(MONTH, ${fieldName}) = ${columnParamName}`
     }
     createDateDayWhereString(fieldName: string, columnParamName: string): string {
-        return `DAY(${fieldName}) = ${columnParamName}`
+        return `DATEPART(DAY, ${fieldName}) = ${columnParamName}`
     }
+    createDateHourWhereString(fieldName: string, columnParamName: string): string {
+        return `DATEPART(HOUR, ${fieldName}) = ${columnParamName}`
+    }
+    createDateMinuteWhereString(fieldName: string, columnParamName: string): string {
+        return `DATEPART(MINUTE, ${fieldName}) = ${columnParamName}`
+    }
+    createDateSecondWhereString(fieldName: string, columnParamName: string): string {
+        return `DATEPART(SECOND, ${fieldName}) = ${columnParamName}`
+    }
+
+
 
     createStringContainsWhereString(fieldName: string, columnParamName: string): string {
         return `${fieldName} LIKE '%' + ${columnParamName} + '%'`
@@ -83,6 +94,12 @@ export abstract class DbAdapter {
     }
     createStringEndsWithWhereString(fieldName: string, columnParamName: string): string {
         return `${fieldName} LIKE '%' + ${columnParamName}`
+    }
+    createStringEqualsTextWhereString(fieldName: string, columnParamName: string): string {
+        return `${fieldName} = ${columnParamName}`
+    }
+    createStringLengthWhereString(fieldName: string, columnParamName: string): string {
+        return `LEN(${fieldName}) = ${columnParamName}`
     }
 
 }
