@@ -6,10 +6,10 @@ import { AllowedFieldTypes, AllowedOperationValueTypes, Condition, IQueryable } 
 import { Uncommitted } from "./Uncommitted"
 
 export function BaseDbSet<TBase,
-    TStrParams extends keyof TBase, 
+    TStrParams extends keyof TBase,
     TNumParams extends keyof TBase,
     TDateParams extends keyof TBase>
-    (tableName: string, adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams,TDateParams> {
+    (tableName: string, adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams, TDateParams> {
     const changes: Uncommitted<TBase>[] = []
 
     function createChange(rec: TBase, changeType: ChangeKindEnum): Uncommitted<TBase> {
@@ -22,25 +22,91 @@ export function BaseDbSet<TBase,
     function remove(rec: TBase) { changes.push(createChange(rec, ChangeKindEnum.Remove)) }
     function update(rec: TBase) { changes.push(createChange(rec, ChangeKindEnum.Update)) }
 
-    function generateWhere(): IQueryable<TBase, TStrParams, TNumParams,TDateParams> {
+    function generateWhere(): IQueryable<TBase, TStrParams, TNumParams, TDateParams> {
         const conditions: Condition[] = []
 
-        const iqueryable: IQueryable<TBase, TStrParams, TNumParams,TDateParams> = {
+        const iqueryable: IQueryable<TBase, TStrParams, TNumParams, TDateParams> = {
             GetAll: readAll,
             GetFirst: readFirst,
 
-            Contains: contains,
-            BiggerThen: biggerThen,
-
-            Year:year
+            Contains: (prop: TStrParams, val: string) => {
+                addToContition(prop, 'string', 'contains', val)
+                return iqueryable
+            },
+            StartsWith: (prop: TStrParams, val: string) => {
+                addToContition(prop, 'string', 'startsWith', val)
+                return iqueryable
+            },
+            EndsWith: (prop: TStrParams, val: string) => {
+                addToContition(prop, 'string', 'endsWith', val)
+                return iqueryable
+            },
+            EqualsText: (prop: TStrParams, val: string) => {
+                addToContition(prop, 'string', 'equalsText', val)
+                return iqueryable
+            },
+            Length: (prop: TStrParams, val: number) => {
+                addToContition(prop, 'number', 'length', val)
+                return iqueryable
+            },
+            
+            BiggerThenNumber: (prop: TNumParams, val: number) => {
+                addToContition(prop, 'number', 'biggerThenNumber', val)
+                return iqueryable
+            },
+            LessThenNumber: (prop: TNumParams, val: number) => {
+                addToContition(prop, 'number', 'lessThenNumber', val)
+                return iqueryable
+            },
+            EqualsNumber: (prop: TNumParams, val: number) => {
+                addToContition(prop, 'number', 'equalsNumber', val)
+                return iqueryable
+            },
+            // InNumbers: (prop: TNumParams, val: number[]) =>{
+            //     addToContition(prop, 'number','inNumbers', val)
+            //     return iqueryable
+            // },
+            Year: (prop: TDateParams, val: number) => {
+                addToContition(prop, 'number', 'year', val)
+                return iqueryable
+            },
+            Month: (prop: TDateParams, val: number) => {
+                addToContition(prop, 'number', 'month', val)
+                return iqueryable
+            },
+            Day: (prop: TDateParams, val: number) => {
+                addToContition(prop, 'number', 'day', val)
+                return iqueryable
+            },
+            Hour: (prop: TDateParams, val: number) => {
+                addToContition(prop, 'number', 'hour', val)
+                return iqueryable
+            },
+            Minute: (prop: TDateParams, val: number) => {
+                addToContition(prop, 'number', 'minute', val)
+                return iqueryable
+            },
+            Second: (prop: TDateParams, val: number) => {
+                addToContition(prop, 'number', 'second', val)
+                return iqueryable
+            },
+            BiggerThenDate: (prop: TDateParams, val: Date) => {
+                addToContition(prop, 'Date', 'biggerThenDate', val)
+                return iqueryable
+            },
+            LessThenDate: (prop: TDateParams, val: Date) => {
+                addToContition(prop, 'Date', 'lessThenDate', val)
+                return iqueryable
+            },
         }
 
         function getConditionString(): [string, SqlParameter[]] {
-            const columnParamKey= 'p'
+            const columnParamKey = 'p'
             const sqlParameters: SqlParameter[] = []
             const conditionStrings = conditions.map((element, index) => {
-                const columnSqlType = table.Columns.filter(x => x.Name == element.FieldName)[0].Type
-                const columnParamName = '@'+ columnParamKey + index.toString()
+                const allColumns = [...table.Columns, table.KeyColumn] 
+                const columnSqlType = allColumns.filter(x => x.Name == element.FieldName)[0].Type
+                const columnParamName = '@' + columnParamKey + index.toString()
 
                 sqlParameters.push({
                     DataType: columnSqlType,
@@ -51,25 +117,30 @@ export function BaseDbSet<TBase,
                 switch (element.FieldType) {
                     case 'Date':
                         switch (element.Operator) {
-                            case 'biggerThan': return adapter.createDateBiggerThanWhereString(element.FieldName, columnParamName)
-                            case 'lessThan': return adapter.createDateLessThanWhereString(element.FieldName, columnParamName)
+                            case 'biggerThenDate': return adapter.createDateBiggerThanWhereString(element.FieldName, columnParamName)
+                            case 'lessThenDate': return adapter.createDateLessThanWhereString(element.FieldName, columnParamName)
                             case 'year': return adapter.createDateYearWhereString(element.FieldName, columnParamName)
                             case 'month': return adapter.createDateMonthWhereString(element.FieldName, columnParamName)
                             case 'day': return adapter.createDateDayWhereString(element.FieldName, columnParamName)
+                            case 'hour': return adapter.createDateHourWhereString(element.FieldName, columnParamName)
+                            case 'minute': return adapter.createDateMinuteWhereString(element.FieldName, columnParamName)
+                            case 'second': return adapter.createDateSecondWhereString(element.FieldName, columnParamName)
                             default: return ''
                         }
                     case 'number':
                         switch (element.Operator) {
-                            case 'biggerThan': return adapter.createNumberBiggerThanWhereString(element.FieldName,columnParamName)
-                            case 'lessThan': return adapter.createNumberLessThanWhereString(element.FieldName,columnParamName)
-                            case 'equals': return adapter.createNumberEqualsWhereString(element.FieldName,columnParamName)
+                            case 'biggerThenNumber': return adapter.createNumberBiggerThanWhereString(element.FieldName, columnParamName)
+                            case 'lessThenNumber': return adapter.createNumberLessThanWhereString(element.FieldName, columnParamName)
+                            case 'equalsNumber': return adapter.createNumberEqualsWhereString(element.FieldName, columnParamName)
                             default: return ''
                         }
                     case 'string':
                         switch (element.Operator) {
-                            case 'contains': return adapter.createStringContainsWhereString(element.FieldName,columnParamName)
-                            case 'startsWith': return adapter.createStringStartsWithWhereString(element.FieldName,columnParamName)
-                            case 'endsWith': return adapter.createStringEndsWithWhereString(element.FieldName,columnParamName)
+                            case 'contains': return adapter.createStringContainsWhereString(element.FieldName, columnParamName)
+                            case 'startsWith': return adapter.createStringStartsWithWhereString(element.FieldName, columnParamName)
+                            case 'endsWith': return adapter.createStringEndsWithWhereString(element.FieldName, columnParamName)
+                            case 'equalsText': return adapter.createStringEqualsTextWhereString(element.FieldName, columnParamName)
+                            case 'length': return adapter.createStringLengthWhereString(element.FieldName, columnParamName)
                             default: return ''
                         }
                     default: return ''
@@ -95,14 +166,14 @@ export function BaseDbSet<TBase,
         async function readFirst(): Promise<TBase> {
             const [conditionStr, conditionParams] = getConditionString()
             const sql: string = adapter.createSelectTopNString(tableName, conditionStr, 1)
-            console.log(sql,conditionParams);
-            
+            console.log(sql, conditionParams);
+
             const result = await adapter.read<TBase>({
                 Statement: sql,
                 Parameters: conditionParams
             })
             console.log(result);
-            
+
             return result[0]
         }
 
@@ -126,20 +197,6 @@ export function BaseDbSet<TBase,
             conditions.push(condition)
         }
 
-        function contains(prop: TStrParams, val: string) {
-            addToContition(prop, 'string', 'contains', val)
-            return iqueryable
-        }
-
-        function biggerThen(prop: TNumParams, val: number) {
-            addToContition(prop, 'number', 'biggerThan', val)
-            return iqueryable
-        }
-
-        function year(prop: TDateParams, val: number) {
-            addToContition(prop, 'number', 'year', val)
-            return iqueryable
-        }
         return iqueryable
     }
 
@@ -161,7 +218,7 @@ export async function TableSaveChanges<TBase>(
     adapter: DbAdapter) {
 
     const sqlList: Sql[] = []
-    
+
     function getChangeVal(c: Uncommitted<TBase>, columnName: string): AllowedOperationValueTypes {
         const columnKey = columnName as keyof TBase
         const val = c.Data[columnKey]
@@ -172,17 +229,17 @@ export async function TableSaveChanges<TBase>(
             return val
         } else {
             return String(val)
-        }        
+        }
     }
 
     tableChanges.forEach(change => {
-        const columnParamKey= 'p'
-        const keyColumnParamKey= 'k'
+        const columnParamKey = 'p'
+        const keyColumnParamKey = 'k'
         let statement: string = ''
         let params: SqlParameter[] = []
         switch (change.ChangeKind) {
-            case ChangeKindEnum.Add: 
-                statement = adapter.getInsertString(tableName,table,columnParamKey)
+            case ChangeKindEnum.Add:
+                statement = adapter.getInsertString(tableName, table, columnParamKey)
                 params = table.Columns.map((x, i): SqlParameter => {
                     return {
                         DataType: x.Type,
@@ -192,7 +249,7 @@ export async function TableSaveChanges<TBase>(
                 })
                 break;
             case ChangeKindEnum.Update:
-                statement = adapter.getUpdateString(tableName,table,columnParamKey,keyColumnParamKey)
+                statement = adapter.getUpdateString(tableName, table, columnParamKey, keyColumnParamKey)
                 params = table.Columns.map((x, i): SqlParameter => {
                     return {
                         DataType: x.Type,
@@ -207,7 +264,7 @@ export async function TableSaveChanges<TBase>(
                 })
                 break;
             case ChangeKindEnum.Remove:
-                statement = adapter.getDeleteString(tableName,table,keyColumnParamKey)
+                statement = adapter.getDeleteString(tableName, table, keyColumnParamKey)
                 params.push({
                     DataType: table.KeyColumn.Type,
                     Name: keyColumnParamKey,

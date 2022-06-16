@@ -3,9 +3,6 @@ ORM for JavaScript like dotnet Entity Framework
 
 ### TODO:
 
-- Implement date and bool where conditions
-- Create more where methods
-
 - Write tests
 - Create ci pipeline to run tests
 
