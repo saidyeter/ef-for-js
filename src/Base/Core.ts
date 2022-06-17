@@ -1,8 +1,8 @@
-import { DbAdapter, Sql, SqlParameter } from "./Adapter"
+import { DbAdapter, Sql, SqlDataType, SqlParameter } from "./Adapter"
 import { ChangeKindEnum } from "./ChangeKindEnum"
 import { DbSet } from "./DbSet"
 import { DbTable } from "./DbTable"
-import { AllowedFieldTypes, AllowedOperationValueTypes, Condition, IQueryable } from "./IQueryable"
+import { AllowedOperationValueTypes, Condition, IQueryable } from "./IQueryable"
 import { Uncommitted } from "./Uncommitted"
 
 export function BaseDbSet<TBase,
@@ -30,72 +30,72 @@ export function BaseDbSet<TBase,
             GetFirst: readFirst,
 
             Contains: (prop: TStrParams, val: string) => {
-                addToContition(prop, 'string', 'contains', val)
+                addToContition(prop,'nvarchar' , 'contains', val)
                 return iqueryable
             },
             StartsWith: (prop: TStrParams, val: string) => {
-                addToContition(prop, 'string', 'startsWith', val)
+                addToContition(prop,'nvarchar' , 'startsWith', val)
                 return iqueryable
             },
             EndsWith: (prop: TStrParams, val: string) => {
-                addToContition(prop, 'string', 'endsWith', val)
+                addToContition(prop,'nvarchar' , 'endsWith', val)
                 return iqueryable
             },
             EqualsText: (prop: TStrParams, val: string) => {
-                addToContition(prop, 'string', 'equalsText', val)
+                addToContition(prop,'nvarchar' , 'equalsText', val)
                 return iqueryable
             },
             Length: (prop: TStrParams, val: number) => {
-                addToContition(prop, 'number', 'length', val)
+                addToContition(prop, 'int', 'length', val)
                 return iqueryable
             },
-            
+
             BiggerThenNumber: (prop: TNumParams, val: number) => {
-                addToContition(prop, 'number', 'biggerThenNumber', val)
+                addToContition(prop, 'int', 'biggerThenNumber', val)
                 return iqueryable
             },
             LessThenNumber: (prop: TNumParams, val: number) => {
-                addToContition(prop, 'number', 'lessThenNumber', val)
+                addToContition(prop, 'int', 'lessThenNumber', val)
                 return iqueryable
             },
             EqualsNumber: (prop: TNumParams, val: number) => {
-                addToContition(prop, 'number', 'equalsNumber', val)
+                addToContition(prop, 'int', 'equalsNumber', val)
                 return iqueryable
             },
             // InNumbers: (prop: TNumParams, val: number[]) =>{
-            //     addToContition(prop, 'number','inNumbers', val)
+            //     addToContition(prop, 'int','inNumbers', val)
             //     return iqueryable
             // },
             Year: (prop: TDateParams, val: number) => {
-                addToContition(prop, 'number', 'year', val)
+                addToContition(prop, 'int', 'year', val)
                 return iqueryable
             },
             Month: (prop: TDateParams, val: number) => {
-                addToContition(prop, 'number', 'month', val)
+                addToContition(prop, 'int', 'month', val)
                 return iqueryable
             },
             Day: (prop: TDateParams, val: number) => {
-                addToContition(prop, 'number', 'day', val)
+                addToContition(prop, 'int', 'day', val)
                 return iqueryable
             },
             Hour: (prop: TDateParams, val: number) => {
-                addToContition(prop, 'number', 'hour', val)
+                addToContition(prop, 'int', 'hour', val)
                 return iqueryable
             },
             Minute: (prop: TDateParams, val: number) => {
-                addToContition(prop, 'number', 'minute', val)
+                addToContition(prop, 'int', 'minute', val)
                 return iqueryable
             },
             Second: (prop: TDateParams, val: number) => {
-                addToContition(prop, 'number', 'second', val)
+                addToContition(prop, 'int', 'second', val)
                 return iqueryable
             },
             BiggerThenDate: (prop: TDateParams, val: Date) => {
-                addToContition(prop, 'Date', 'biggerThenDate', val)
+                addToContition(prop, 'datetime', 'biggerThenDate', val)
                 return iqueryable
             },
             LessThenDate: (prop: TDateParams, val: Date) => {
-                addToContition(prop, 'Date', 'lessThenDate', val)
+                addToContition(prop, 'datetime', 'lessThenDate', val)
                 return iqueryable
             },
         }
@@ -104,47 +104,38 @@ export function BaseDbSet<TBase,
             const columnParamKey = 'p'
             const sqlParameters: SqlParameter[] = []
             const conditionStrings = conditions.map((element, index) => {
-                const allColumns = [...table.Columns, table.KeyColumn] 
+                const allColumns = [...table.Columns, table.KeyColumn]
                 const columnSqlType = allColumns.filter(x => x.Name == element.FieldName)[0].Type
                 const columnParamName = '@' + columnParamKey + index.toString()
 
                 sqlParameters.push({
-                    DataType: columnSqlType,
+                    DataType: element.FieldType,
                     Name: columnParamKey + index.toString(),
                     Value: element.OperationValue as AllowedOperationValueTypes
                 })
 
-                switch (element.FieldType) {
-                    case 'Date':
-                        switch (element.Operator) {
-                            case 'biggerThenDate': return adapter.createDateBiggerThanWhereString(element.FieldName, columnParamName)
-                            case 'lessThenDate': return adapter.createDateLessThanWhereString(element.FieldName, columnParamName)
-                            case 'year': return adapter.createDateYearWhereString(element.FieldName, columnParamName)
-                            case 'month': return adapter.createDateMonthWhereString(element.FieldName, columnParamName)
-                            case 'day': return adapter.createDateDayWhereString(element.FieldName, columnParamName)
-                            case 'hour': return adapter.createDateHourWhereString(element.FieldName, columnParamName)
-                            case 'minute': return adapter.createDateMinuteWhereString(element.FieldName, columnParamName)
-                            case 'second': return adapter.createDateSecondWhereString(element.FieldName, columnParamName)
-                            default: return ''
-                        }
-                    case 'number':
-                        switch (element.Operator) {
-                            case 'biggerThenNumber': return adapter.createNumberBiggerThanWhereString(element.FieldName, columnParamName)
-                            case 'lessThenNumber': return adapter.createNumberLessThanWhereString(element.FieldName, columnParamName)
-                            case 'equalsNumber': return adapter.createNumberEqualsWhereString(element.FieldName, columnParamName)
-                            default: return ''
-                        }
-                    case 'string':
-                        switch (element.Operator) {
-                            case 'contains': return adapter.createStringContainsWhereString(element.FieldName, columnParamName)
-                            case 'startsWith': return adapter.createStringStartsWithWhereString(element.FieldName, columnParamName)
-                            case 'endsWith': return adapter.createStringEndsWithWhereString(element.FieldName, columnParamName)
-                            case 'equalsText': return adapter.createStringEqualsTextWhereString(element.FieldName, columnParamName)
-                            case 'length': return adapter.createStringLengthWhereString(element.FieldName, columnParamName)
-                            default: return ''
-                        }
+                switch (element.Operator) {
+                    case 'biggerThenDate': return adapter.createDateBiggerThanWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'lessThenDate': return adapter.createDateLessThanWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'year': return adapter.createDateYearWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'month': return adapter.createDateMonthWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'day': return adapter.createDateDayWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'hour': return adapter.createDateHourWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'minute': return adapter.createDateMinuteWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'second': return adapter.createDateSecondWhereString(element.FieldName, columnParamName, columnSqlType)
+
+                    case 'biggerThenNumber': return adapter.createNumberBiggerThanWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'lessThenNumber': return adapter.createNumberLessThanWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'equalsNumber': return adapter.createNumberEqualsWhereString(element.FieldName, columnParamName, columnSqlType)
+
+                    case 'contains': return adapter.createStringContainsWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'startsWith': return adapter.createStringStartsWithWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'endsWith': return adapter.createStringEndsWithWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'equalsText': return adapter.createStringEqualsTextWhereString(element.FieldName, columnParamName, columnSqlType)
+                    case 'length': return adapter.createStringLengthWhereString(element.FieldName, columnParamName, columnSqlType)
                     default: return ''
                 }
+
             });
 
             const conditionPart: string = adapter.getConditionString(conditionStrings)
@@ -166,20 +157,20 @@ export function BaseDbSet<TBase,
         async function readFirst(): Promise<TBase> {
             const [conditionStr, conditionParams] = getConditionString()
             const sql: string = adapter.createSelectTopNString(tableName, conditionStr, 1)
-            console.log(sql, conditionParams);
+            // console.log(sql, conditionParams);
 
             const result = await adapter.read<TBase>({
                 Statement: sql,
                 Parameters: conditionParams
             })
-            console.log(result);
+            // console.log(result);
 
             return result[0]
         }
 
         function addToContition(
             prop: unknown,
-            fieldType: AllowedFieldTypes,
+            fieldType: SqlDataType,
             operator: string,
             val: AllowedOperationValueTypes) {
 

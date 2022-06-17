@@ -1,3 +1,5 @@
+import { SqlDataType } from "./Adapter"
+
 export interface IQueryable<TBase,
  TStrParams extends keyof TBase, 
  TNumParams extends keyof TBase,
@@ -30,11 +32,10 @@ export interface IQueryable<TBase,
 
 export type AllowedOperationValueTypes = number | string | Date
 
-export type AllowedFieldTypes = 'number' | 'string' | 'Date' 
 
 export interface Condition  {
     FieldName: string
-    FieldType: AllowedFieldTypes
+    FieldType: SqlDataType
     Operator: string
     OperationValue: AllowedOperationValueTypes
 }
