@@ -207,6 +207,8 @@ export class MsSqlAdapter extends DbAdapter {
     }
 
     async execute(v: Sql): Promise<void> {
+        // this.log(v.Statement)
+        // this.log(JSON.stringify(v.Parameters))
         const res = await this.query<any>(v)
         this.log('rowsAffected: ' + res.rowsAffected.toString())
     }
