@@ -6,13 +6,21 @@
   "author": "Said Yeter <kordiseps@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "tsc && node dist/index.js"
+    "build": "npx tsc",
+    "start": "node dist/index.js",
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
   },
   "dependencies": {
+    "@types/express": "^4.17.13",
+    "@types/node": "^18.7.14",
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
     "mssql": "^8.1.2"
   },
   "devDependencies": {
     "@types/mssql": "^8.0.2",
+    "concurrently": "^7.3.0",
+    "nodemon": "^2.0.19",
     "typescript": "^4.7.3"
   }
 }

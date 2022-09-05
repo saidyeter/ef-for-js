@@ -1,48 +1,51 @@
-import { MsSqlAdapter } from "./Base/Adapter";
-import dbAdapter from "./DataAccess/LibraryDbContext";
+import { startServer } from "./sample";
 
-(async function () {
+startServer()
+// import { MsSqlAdapter } from "./Base/Adapter";
+// import dbAdapter from "./DataAccess/LibraryDbContext";
 
-    // const a = {
-    //     database: 'ef4js',
-    //     server: 'localhost,1433',
-    //     user: 'sa',
-    //     password: 'MyPass@word'
-    // }
+// (async function () {
 
-    const conenctionString = 'Server=localhost,1433;Database=ef4js;User Id=sa;Password=MyPass@word;TrustServerCertificate=True;'
-    const adapter = new MsSqlAdapter(conenctionString)
-    const db = dbAdapter.init(adapter)
+//     // const a = {
+//     //     database: 'ef4js',
+//     //     server: 'localhost,1433',
+//     //     user: 'sa',
+//     //     password: 'MyPass@word'
+//     // }
 
-    const rec = await db.book
-        .Where()
-        .Year('InsertedAt', 2022)
-        .Month('InsertedAt', 6)
-        .Day('InsertedAt', 11)
-        .Hour('InsertedAt', 12)
-        .Minute('InsertedAt', 49)
-        .Second('InsertedAt', 11)
-        .Contains('Name', 'em')
-        .EndsWith('Name', 'or')
-        .StartsWith('Name', 'Dune')
-        .BiggerThenNumber('AuthorId', 1)
-        .LessThenNumber('PublisherId', 10)
-        .EqualsNumber('Id', 3)
+//     const conenctionString = 'Server=localhost,1433;Database=ef4js;User Id=sa;Password=MyPass@word;TrustServerCertificate=True;'
+//     const adapter = new MsSqlAdapter(conenctionString)
+//     const db = dbAdapter.init(adapter)
 
-        .GetFirst()
+//     const rec = await db.book
+//         .Where()
+//         .Year('InsertedAt', 2022)
+//         .Month('InsertedAt', 6)
+//         .Day('InsertedAt', 11)
+//         .Hour('InsertedAt', 12)
+//         .Minute('InsertedAt', 49)
+//         .Second('InsertedAt', 11)
+//         .Contains('Name', 'em')
+//         .EndsWith('Name', 'or')
+//         .StartsWith('Name', 'Dune')
+//         .BiggerThenNumber('AuthorId', 1)
+//         .LessThenNumber('PublisherId', 10)
+//         .EqualsNumber('Id', 3)
 
-    console.log('rec', rec);
+//         .GetFirst()
 
-    // const newbook: Book = {
-    //     Name: 'LoTR',
-    //     InsertedAt: new Date(),
-    //     AuthorId: 23,
-    //     PublisherId: 14
-    // }
-    // db.book.Add(newbook)
+//     console.log('rec', rec);
 
-    // rec.AuthorId = 11
-    // db.book.Update(rec)
+//     // const newbook: Book = {
+//     //     Name: 'LoTR',
+//     //     InsertedAt: new Date(),
+//     //     AuthorId: 23,
+//     //     PublisherId: 14
+//     // }
+//     // db.book.Add(newbook)
 
-    // db.SaveChanges()
-})()
+//     // rec.AuthorId = 11
+//     // db.book.Update(rec)
+
+//     // db.SaveChanges()
+// })()
