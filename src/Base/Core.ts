@@ -5,9 +5,10 @@ import { DbTable } from "./DbTable"
 import { AllowedOperationValueTypes, Condition, IQueryable } from "./IQueryable"
 import { Uncommitted } from "./Uncommitted"
 
-export function BaseDbSet<TBase, TStrParams extends keyof TBase |Empty, TNumParams extends keyof TBase | Empty, TDateParams extends keyof TBase | Empty>
-    (tableName: string, adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams, TDateParams> {
+export function BaseDbSet<TBase, TStrParams extends keyof TBase | Empty, TNumParams extends keyof TBase | Empty, TDateParams extends keyof TBase | Empty>
+    (adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams, TDateParams> {
     const changes: Uncommitted<TBase>[] = []
+    const tableName: string = table.TableName
 
     function createChange(rec: TBase, changeType: ChangeKindEnum): Uncommitted<TBase> {
         return {
@@ -201,10 +202,9 @@ export function BaseDbSet<TBase, TStrParams extends keyof TBase |Empty, TNumPara
 
 export async function TableSaveChanges<TBase>(
     tableChanges: Uncommitted<TBase>[],
-    tableName: string,
     table: DbTable,
     adapter: DbAdapter) {
-
+    const tableName: string = table.TableName
     const sqlList: Sql[] = []
 
     function getChangeVal(c: Uncommitted<TBase>, columnName: string): AllowedOperationValueTypes {
