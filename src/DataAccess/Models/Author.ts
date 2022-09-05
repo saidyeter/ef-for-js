@@ -1,19 +1,20 @@
+import { Empty } from "../../Base/DbSet"
 import { DbTable } from "../../Base/DbTable"
 
 export type Author = {
     Id: number
-    InsertedAt: Date
     Name: string
+    Origin: string
 }
 
-export type AuthorTableNumbers = "Id" 
-export type AuthorTableStrings = "Name" 
-export type AuthorTableDates = "InsertedAt" 
+export type AuthorTableNumbers = "Id"
+export type AuthorTableStrings = "Name" | 'Origin'
+export type AuthorTableDates = keyof Empty
 
 export const AuthorTable: DbTable = {
     Columns: [
-        { Name: 'InsertedAt', Type: 'datetime' },
+        { Name: 'Origin', Type: 'nvarchar' },
         { Name: 'Name', Type: 'nvarchar' },
     ],
-    KeyColumn : { Name: 'Id', Type: 'int' },
+    KeyColumn: { Name: 'Id', Type: 'int' },
 }

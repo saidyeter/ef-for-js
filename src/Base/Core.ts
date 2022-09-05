@@ -1,14 +1,11 @@
 import { DbAdapter, Sql, SqlDataType, SqlParameter } from "./Adapter"
 import { ChangeKindEnum } from "./ChangeKindEnum"
-import { DbSet } from "./DbSet"
+import { DbSet, Empty } from "./DbSet"
 import { DbTable } from "./DbTable"
 import { AllowedOperationValueTypes, Condition, IQueryable } from "./IQueryable"
 import { Uncommitted } from "./Uncommitted"
 
-export function BaseDbSet<TBase,
-    TStrParams extends keyof TBase,
-    TNumParams extends keyof TBase,
-    TDateParams extends keyof TBase>
+export function BaseDbSet<TBase, TStrParams extends keyof TBase |Empty, TNumParams extends keyof TBase | Empty, TDateParams extends keyof TBase | Empty>
     (tableName: string, adapter: DbAdapter, table: DbTable): DbSet<TBase, TStrParams, TNumParams, TDateParams> {
     const changes: Uncommitted<TBase>[] = []
 
@@ -30,19 +27,19 @@ export function BaseDbSet<TBase,
             GetFirst: readFirst,
 
             Contains: (prop: TStrParams, val: string) => {
-                addToContition(prop,'nvarchar' , 'contains', val)
+                addToContition(prop, 'nvarchar', 'contains', val)
                 return iqueryable
             },
             StartsWith: (prop: TStrParams, val: string) => {
-                addToContition(prop,'nvarchar' , 'startsWith', val)
+                addToContition(prop, 'nvarchar', 'startsWith', val)
                 return iqueryable
             },
             EndsWith: (prop: TStrParams, val: string) => {
-                addToContition(prop,'nvarchar' , 'endsWith', val)
+                addToContition(prop, 'nvarchar', 'endsWith', val)
                 return iqueryable
             },
             EqualsText: (prop: TStrParams, val: string) => {
-                addToContition(prop,'nvarchar' , 'equalsText', val)
+                addToContition(prop, 'nvarchar', 'equalsText', val)
                 return iqueryable
             },
             Length: (prop: TStrParams, val: number) => {
