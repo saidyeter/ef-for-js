@@ -1,6 +1,7 @@
 import { SqlDataType } from "./Adapter";
 
 export interface DbTable {
+    TableName: string;
     Columns: DbColumn[];
     KeyColumn: DbColumn;
 }
